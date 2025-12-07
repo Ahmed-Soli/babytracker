@@ -43,55 +43,6 @@
       margin-bottom: 20px;
     }
 
-    label {
-      display: block;
-      font-size: 0.9rem;
-      margin-bottom: 4px;
-      font-weight: 600;
-    }
-
-    input[type="date"] {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 0.95rem;
-      margin-bottom: 12px;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: none;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      margin-bottom: 14px;
-      background: #111827;
-      color: #ffffff;
-      transition: transform 0.05s ease, box-shadow 0.05s ease, opacity 0.2s ease;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-    }
-
-    button:active {
-      transform: translateY(1px) scale(0.99);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    .info {
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 12px;
-    }
-
-    .error {
-      color: #b91c1c;
-      font-size: 0.85rem;
-      margin-bottom: 10px;
-      display: none;
-    }
-
     .cards {
       display: grid;
       grid-template-columns: 1fr;
@@ -145,22 +96,11 @@
 <body>
   <div class="container">
     <h1>Pregnancy Age Counter</h1>
-    <p class="subtitle">Enter the pregnancy start date and watch it update automatically.</p>
+    <p class="subtitle">
+      Counting from fixed LMP date: <strong>18 September 2025</strong>.
+    </p>
 
-    <div>
-      <label for="startDate">Pregnancy start date</label>
-      <input type="date" id="startDate" />
-    </div>
-
-    <button id="startBtn">Start / Update Counter</button>
-
-    <div id="error" class="error"></div>
-
-    <div id="info" class="info">
-      Tip: You can use the date of the last menstrual period or the conception date (your choice).
-    </div>
-
-    <div id="results" style="display: none;">
+    <div id="results">
       <div class="cards">
         <div class="card">
           <div class="card-title">Current age (days)</div>
@@ -191,10 +131,8 @@
   </div>
 
   <script>
-    const startInput = document.getElementById("startDate");
-    const startBtn = document.getElementById("startBtn");
-    const errorEl = document.getElementById("error");
-    const resultsEl = document.getElementById("results");
+    // Fixed LMP date: 18 September 2025
+    const START_DATE = new Date("2025-09-18T00:00:00");
 
     const ageDaysEl = document.getElementById("ageDays");
     const ageWeeksEl = document.getElementById("ageWeeks");
@@ -207,7 +145,6 @@
     const updatedTextEl = document.getElementById("updatedText");
 
     let timerId = null;
-    const STORAGE_KEY = "pregnancy_start_date";
 
     function formatDate(date) {
       return date.toLocaleDateString(undefined, {
@@ -231,44 +168,8 @@
       return d;
     }
 
-    function loadSavedDate() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        startInput.value = saved;
-        startCounter();
-      }
-    }
-
-    function saveDate(dateStr) {
-      localStorage.setItem(STORAGE_KEY, dateStr);
-    }
-
     function startCounter() {
-      const dateStr = startInput.value;
-      if (!dateStr) {
-        showError("Please choose a date first.");
-        return;
-      }
-
-      const startDate = new Date(dateStr + "T00:00:00");
-      if (Number.isNaN(startDate.getTime())) {
-        showError("Invalid date. Please try again.");
-        return;
-      }
-
-      const now = new Date();
-      if (startDate > now) {
-        showError("Start date cannot be in the future.");
-        return;
-      }
-
-      hideError();
-      saveDate(dateStr);
-
-      if (timerId) {
-        clearInterval(timerId);
-      }
-
+      const startDate = START_DATE;
       const endDate = addMonths(startDate, 9);
 
       function update() {
@@ -301,29 +202,14 @@
         startTextEl.textContent = formatDate(startDate);
         endTextEl.textContent = formatDate(endDate);
         updatedTextEl.textContent = now.toLocaleString();
-
-        resultsEl.style.display = "block";
       }
 
       update(); // initial
       timerId = setInterval(update, 1000); // update every second
     }
 
-    function showError(msg) {
-      errorEl.textContent = msg;
-      errorEl.style.display = "block";
-      resultsEl.style.display = "none";
-    }
-
-    function hideError() {
-      errorEl.textContent = "";
-      errorEl.style.display = "none";
-    }
-
-    startBtn.addEventListener("click", startCounter);
-
-    // Start automatically if previously saved
-    loadSavedDate();
+    // Start immediately on page load
+    startCounter();
   </script>
 </body>
 </html>
