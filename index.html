@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pregnancy Age Counter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 24px 20px;
+      max-width: 480px;
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    input[type="date"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 14px;
+      background: #111827;
+      color: #ffffff;
+      transition: transform 0.05s ease, box-shadow 0.05s ease, opacity 0.2s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .info {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .error {
+      color: #b91c1c;
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 480px) {
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .card {
+      padding: 12px;
+      border-radius: 10px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .card-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .small {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .muted {
+      color: #6b7280;
+      font-size: 0.85rem;
+      margin-top: 12px;
+    }
+
+    .highlight {
+      font-weight: 600;
+      color: #111827;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pregnancy Age Counter</h1>
+    <p class="subtitle">Enter the pregnancy start date and watch it update automatically.</p>
+
+    <div>
+      <label for="startDate">Pregnancy start date</label>
+      <input type="date" id="startDate" />
+    </div>
+
+    <button id="startBtn">Start / Update Counter</button>
+
+    <div id="error" class="error"></div>
+
+    <div id="info" class="info">
+      Tip: You can use the date of the last menstrual period or the conception date (your choice).
+    </div>
+
+    <div id="results" style="display: none;">
+      <div class="cards">
+        <div class="card">
+          <div class="card-title">Current age (days)</div>
+          <div class="card-value" id="ageDays">–</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Current age (weeks)</div>
+          <div class="card-value" id="ageWeeks">–</div>
+          <div class="small" id="ageWeeksExact"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Current age (months)</div>
+          <div class="card-value" id="ageMonths">–</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Time until 9 months</div>
+          <div class="card-value" id="remaining">–</div>
+          <div class="small" id="remainingExact"></div>
+        </div>
+      </div>
+
+      <p class="muted">
+        <span class="highlight">Start date:</span> <span id="startText">–</span><br />
+        <span class="highlight">9 months date:</span> <span id="endText">–</span><br />
+        <span class="highlight">Last updated:</span> <span id="updatedText">–</span>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const startInput = document.getElementById("startDate");
+    const startBtn = document.getElementById("startBtn");
+    const errorEl = document.getElementById("error");
+    const resultsEl = document.getElementById("results");
+
+    const ageDaysEl = document.getElementById("ageDays");
+    const ageWeeksEl = document.getElementById("ageWeeks");
+    const ageWeeksExactEl = document.getElementById("ageWeeksExact");
+    const ageMonthsEl = document.getElementById("ageMonths");
+    const remainingEl = document.getElementById("remaining");
+    const remainingExactEl = document.getElementById("remainingExact");
+    const startTextEl = document.getElementById("startText");
+    const endTextEl = document.getElementById("endText");
+    const updatedTextEl = document.getElementById("updatedText");
+
+    let timerId = null;
+    const STORAGE_KEY = "pregnancy_start_date";
+
+    function formatDate(date) {
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
+    // Add months safely (calendar months)
+    function addMonths(date, months) {
+      const d = new Date(date.getTime());
+      const day = d.getDate();
+      d.setMonth(d.getMonth() + months);
+
+      // Handle month overflow (e.g., Jan 31 -> Feb 28/29)
+      if (d.getDate() < day) {
+        d.setDate(0); // last day of previous month
+      }
+
+      return d;
+    }
+
+    function loadSavedDate() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        startInput.value = saved;
+        startCounter();
+      }
+    }
+
+    function saveDate(dateStr) {
+      localStorage.setItem(STORAGE_KEY, dateStr);
+    }
+
+    function startCounter() {
+      const dateStr = startInput.value;
+      if (!dateStr) {
+        showError("Please choose a date first.");
+        return;
+      }
+
+      const startDate = new Date(dateStr + "T00:00:00");
+      if (Number.isNaN(startDate.getTime())) {
+        showError("Invalid date. Please try again.");
+        return;
+      }
+
+      const now = new Date();
+      if (startDate > now) {
+        showError("Start date cannot be in the future.");
+        return;
+      }
+
+      hideError();
+      saveDate(dateStr);
+
+      if (timerId) {
+        clearInterval(timerId);
+      }
+
+      const endDate = addMonths(startDate, 9);
+
+      function update() {
+        const now = new Date();
+
+        const totalMs = endDate - startDate;
+        const elapsedMs = Math.min(Math.max(now - startDate, 0), totalMs);
+        const remainingMs = Math.max(endDate - now, 0);
+
+        const days = elapsedMs / (1000 * 60 * 60 * 24);
+        const weeks = days / 7;
+        const months = days / 30.4375; // average month length
+
+        const remainingDays = remainingMs / (1000 * 60 * 60 * 24);
+        const remainingWeeks = remainingDays / 7;
+
+        ageDaysEl.textContent = Math.floor(days).toLocaleString();
+        ageWeeksEl.textContent = Math.floor(weeks).toString();
+        ageWeeksExactEl.textContent = weeks.toFixed(1) + " weeks";
+        ageMonthsEl.textContent = months.toFixed(1);
+
+        if (remainingMs === 0) {
+          remainingEl.textContent = "0 days";
+          remainingExactEl.textContent = "Reached 9 months 🎉";
+        } else {
+          remainingEl.textContent = Math.ceil(remainingDays) + " days";
+          remainingExactEl.textContent = remainingWeeks.toFixed(1) + " weeks left";
+        }
+
+        startTextEl.textContent = formatDate(startDate);
+        endTextEl.textContent = formatDate(endDate);
+        updatedTextEl.textContent = now.toLocaleString();
+
+        resultsEl.style.display = "block";
+      }
+
+      update(); // initial
+      timerId = setInterval(update, 1000); // update every second
+    }
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = "block";
+      resultsEl.style.display = "none";
+    }
+
+    function hideError() {
+      errorEl.textContent = "";
+      errorEl.style.display = "none";
+    }
+
+    startBtn.addEventListener("click", startCounter);
+
+    // Start automatically if previously saved
+    loadSavedDate();
+  </script>
+</body>
+</html>
